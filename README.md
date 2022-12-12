@@ -15,3 +15,4 @@ gcc main.c -I/usr/local/include -L/usr/local/lib  -lpcre2-8 -o main
 
 Test:
 ftp://ftp.up.pt/pub/CPAN/README.html
+ftp://up202007485:12A34@ftp.up.pt/pinguim/hola/pinguim.gif (nt supposed to work)

@@ -472,28 +472,19 @@ int disconnectCtrlSocket(int ctrl_socket_fd){
     return -1;
 }
 
-
-
 //download ftp://[<user>:<password>@]<host>/<url-path>
 int main(int argc, char ** argv) {
-    /*
-    if(argc != 2){
+    if(argc != 3 || strcmp(argv[1], "download") !=0){
         printf("usage: download ftp://[<user>:<password>@]<host>/<url-path> \n");
         exit(1);
     }
-    */
+
+    char* url = argv[2];
+    printf("URL: %s\n", url);
+
     connectionParameters *params = malloc(sizeof(*params));
-
-    char* host = "ftp.up.pt";
-    char result[30];
-    getip(host, result);
-    printf("%s", result);
-
     //1
-    char url2[] = "ftp://up202007485:12A34@ftp.up.pt/pinguim/hola/pinguim.gif";
-    char url3[] = "ftp://ftp.up.pt/";
-    char url4[] = "ftp://ftp.up.pt/pub/CPAN/README.html";
-    if(parseURL(url4, params) == -1){
+    if(parseURL(url, params) == -1){
         printf("ERROR parse");
         return -1;
     }
@@ -522,22 +513,53 @@ int main(int argc, char ** argv) {
         printf("Socket created and connected");
     }
 
-    //4
-    if(sendToControlSocket(ctrl_fd, "hola", "manel") == -1){
-        printf("ERROR sendToControlSocket\n");
+    //4 - Test
+    if(sendToControlSocket(ctrl_fd, "test", "test") == -1){
+        printf("ERROR sendToControlSocket test\n");
         return -1;
     }else{
-        printf("Sent successful\n");
+        printf("Test successful\n");
     }
 
     char response[RESPONSE_MAX_LENGTH];
     receiveFromControlSocket(ctrl_fd, RESPONSE_MAX_LENGTH, response);
 
-    login(ctrl_fd, params->user, params->password);
-    changeWorkingDirectory(ctrl_fd, params->path);
+    //5
+    if(login(ctrl_fd, params->user, params->password)==-1){
+        printf("ERROR login()");
+        return -1;
+    }
+
+    //6
+    if(changeWorkingDirectory(ctrl_fd, params->path)==-1){
+        printf("ERROR changeWorkingDirectory()");
+        return -1;
+    }
+
+    //7
     int pasv_fd = getServerPortForFile(ctrl_fd);
-    retrCommandControl(ctrl_fd, params->file_name);
-    saveFile(pasv_fd, params->file_name);
-    disconnectCtrlSocket(ctrl_fd);
+    if(pasv_fd ==-1){
+        printf("ERROR getServerPortForFile()");
+        return -1;
+    }
+
+    //8
+    if(retrCommandControl(ctrl_fd, params->file_name)==-1){
+        printf("ERROR retrCommandControl()");
+        return -1;
+    }
+
+    //9
+    if(saveFile(pasv_fd, params->file_name)==-1){
+        printf("ERROR saveFile()");
+        return -1;
+    }
+
+    //10
+    if(disconnectCtrlSocket(ctrl_fd)==-1){
+        printf("ERROR disconnectCtrlSocket()");
+        return -1;
+    }
+
     return 0;
 }
