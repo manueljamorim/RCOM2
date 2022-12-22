@@ -17,6 +17,7 @@
  Compile:
  gcc -Wall main.c -lpcre2-8 -o main
 
+ gcc -Wall main.c -lpcre2-8 -o main
 */
 #define PCRE2_CODE_UNIT_WIDTH 8
 
@@ -45,6 +46,7 @@ typedef struct connectionParameters{
     char ip[100]; //returned by getip
 }connectionParameters;
 
+int transfile=0;
 
 //BASED TFC1738
 void getRegex(char* reg_ex){
@@ -278,7 +280,6 @@ void receiveFromControlSocket(int socket_fd, int size, char *response) {
 }
 
 
-
 //4
 //RFC 959-FTP
 /* RETURN
@@ -299,6 +300,7 @@ int sendReceiveControlSocketAction(int socket_fd, char *header, char *body, int 
             expect another reply before proceeding with a new command;
             */
             printf("-->Listening to another reply<--\n");
+            if(transfile == 1){return 2;}
             continue;
         }else if(response[0] == '2'){
             /*Positive Completion reply
@@ -419,7 +421,10 @@ int getServerPortForFile(int socket_fd){
 int retrCommandControl(int ctrl_socket_fd, char* file_name){
     printf("\n\nSending RETR %s command to control socket:\n", file_name);
     char response[RESPONSE_MAX_LENGTH];
+    
+    transfile = 1;
     int ftp_code = sendReceiveControlSocketAction(ctrl_socket_fd, "RETR", file_name, RESPONSE_MAX_LENGTH, response);
+    transfile = 0;
     if(ftp_code == 2){
         printf("Transfer Complete to passive socket\n");
         return 0;
@@ -513,6 +518,7 @@ int main(int argc, char ** argv) {
         printf("Socket created and connected");
     }
 
+    /*
     //4 - Test
     if(sendToControlSocket(ctrl_fd, "test", "test") == -1){
         printf("ERROR sendToControlSocket test\n");
@@ -520,6 +526,7 @@ int main(int argc, char ** argv) {
     }else{
         printf("Test successful\n");
     }
+    */
 
     char response[RESPONSE_MAX_LENGTH];
     receiveFromControlSocket(ctrl_fd, RESPONSE_MAX_LENGTH, response);
